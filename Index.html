@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Quản Lý Lịch & Xe Công Vụ Đồng Nai</title>
+  <style>
+    :root {
+      --navy: #1e3a8a; --blue: #1d4ed8; --blue-light: #eff6ff; --slate-50: #f8fafc;
+      --slate-100: #f1f5f9; --slate-200: #e2e8f0; --slate-300: #cbd5e1; --slate-600: #475569;
+      --slate-800: #1e293b; --green-bg: #dcfce7; --green-txt: #15803d; --red-bg: #fee2e2;
+      --red-txt: #b91c1c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background-color: var(--slate-100); color: var(--slate-800); font-size: 13px; line-height: 1.45; overflow-x: hidden; }
+    .container { max-width: 1440px; margin: 0 auto; padding: 0 14px; }
+    
+    .gov-header { background: linear-gradient(90deg, var(--navy) 0%, var(--blue) 100%); color: #fff; padding: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .header-flex { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+    .brand-box { display: flex; align-items: center; gap: 12px; }
+    
+    /* Chỉnh kích thước hiển thị của Logo MTTQ trên Header */
+    .brand-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; background: #fff; padding: 2px;}
+    .brand-icon img { width: 100%; height: auto; object-fit: contain;}
+    
+    .header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+    .btn { border: none; border-radius: 6px; padding: 7px 11px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+    .btn:hover { opacity: 0.9; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-success { background: #059669; color: #fff; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-dark { background: #1e293b; color: #fff; }
+    .btn-outline { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); }
+    .btn-sm { padding: 4px 7px; font-size: 11px; }
+
+    .btn-move { padding: 4px; font-size: 14px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;}
+    .btn-move:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+
+    input, select, textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--slate-300); border-radius: 6px; font-size: 12.5px; background: #fff; color: var(--slate-800); }
+    input:focus, select:focus { outline: 2px solid var(--blue); border-color: transparent; }
+    label { display: block; font-size: 11.5px; font-weight: 700; color: var(--slate-600); margin-bottom: 4px; }
+
+    .nav-bar { background: #fff; border-bottom: 1px solid var(--slate-200); position: sticky; top: 0; z-index: 10; }
+    .nav-list { display: flex; overflow-x: auto; gap: 4px; }
+    .nav-tab { background: transparent; border: none; border-bottom: 3px solid transparent; padding: 12px 14px; font-size: 13px; font-weight: 600; color: var(--slate-600); cursor: pointer; white-space: nowrap; }
+    .nav-tab:hover { color: var(--blue); }
+    .nav-tab.active { border-bottom-color: var(--blue); color: var(--blue); background: var(--blue-light); font-weight: 700; }
+
+    .main-wrap { padding: 16px 0 40px 0; min-height: 80vh;}
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: #fff; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--slate-200); box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .stat-label { font-size: 11px; color: var(--slate-600); font-weight: 600; }
+    .stat-val { font-size: 21px; font-weight: 800; margin-top: 3px; }
+    .work-grid { display: grid; grid-template-columns: minmax(330px, 380px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 1100px) { .work-grid { grid-template-columns: 1fr; } }
+    .card { background: #fff; border-radius: 10px; border: 1px solid var(--slate-200); padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); width: 100%; max-width: 100%; overflow: hidden; }
+    .card-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--slate-200); padding-bottom: 10px; margin-bottom: 12px; }
+    .card-title { font-size: 14.5px; font-weight: 800; color: var(--navy); text-transform: uppercase; }
+
+    .form-row { margin-bottom: 10px; width: 100%; }
+    .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; }
+    .grid-3 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; }
+    .filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; background: var(--slate-50); padding: 10px; border-radius: 8px; border: 1px solid var(--slate-200); margin-bottom: 12px; }
+
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table.data-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 11.8px; }
+    table.data-table th { background: var(--slate-100); color: #334155; text-transform: uppercase; font-size: 10.5px; padding: 8px 6px; border-top: 1px solid var(--slate-300); border-bottom: 1px solid var(--slate-300); text-align: left; }
+    table.data-table td { padding: 8px 6px; border-bottom: 1px solid var(--slate-200); vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+    
+    .badge { display: inline-block; padding: 3px 7px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; line-height: 1.25; text-align: center; }
+    .st-green { background: var(--green-bg); color: var(--green-txt); border: 1px solid #86efac; }
+    .st-red { background: var(--red-bg); color: var(--red-txt); border: 1px solid #fca5a5; }
+    .st-orange { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+    .st-blue { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+    .st-gray { background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; }
+
+    .alert-box { background: #fef2f2; border-left: 6px solid #dc2626; border-radius: 8px; padding: 14px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(220,38,38,0.12); }
+    .hidden { display: none !important; }
+
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9000; display: flex; justify-content: center; align-items: flex-start; padding-top: 50px; overflow-y: auto;}
+    .modal-content { background: #fff; padding: 20px; border-radius: 8px; width: 450px; margin-bottom: 50px; }
+    
+    .preview-modal-content { background: #fff; padding: 0; border-radius: 8px; width: 900px; max-width: 95%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; margin-top: 20px;}
+    .preview-header { background: var(--slate-100); padding: 15px 20px; border-bottom: 1px solid var(--slate-200); display: flex; justify-content: space-between; align-items: center; }
+    .preview-body { padding: 30px; overflow-y: auto; background: #e2e8f0; display: flex; justify-content: center; }
+    .preview-paper { background: #fff; padding: 20mm; width: 210mm; min-height: 297mm; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    
+    #toastMsg { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.3s; opacity: 0; pointer-events: none; z-index: 9999; }
+    #toastMsg.show { opacity: 1; transform: translateY(-10px); }
+
+    /* GIAO DIỆN ĐĂNG NHẬP */
+    #loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, var(--navy) 100%); z-index: 9998; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .login-box { background: #fff; padding: 40px 30px; border-radius: 12px; width: 420px; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.4); border-top: 5px solid var(--blue); }
+    .login-box h2 { color: var(--navy); margin-bottom: 5px; font-size: 22px; text-transform: uppercase; font-weight: 900;}
+    .login-box p { color: var(--slate-600); font-size: 14px; margin-bottom: 25px; font-weight: 700; text-transform: uppercase;}
+    
+    /* Logo MTTQ ở Form đăng nhập */
+    .login-logo { width: 70px; height: 70px; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center;}
+    .login-logo img { width: 100%; height: auto; object-fit: contain; }
+    
+    .login-input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid var(--slate-300); border-radius: 6px; font-size: 14px; background: #f8fafc;}
+    .login-input:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15); }
+    .login-btn { width: 100%; padding: 12px; font-size: 15px; border-radius: 6px; text-transform: uppercase; margin-top: 5px;}
+    .login-footer { margin-top: 25px; font-size: 13px; color: rgba(255,255,255,0.8); text-align: center; line-height: 1.6;}
+    
+    .app-footer { text-align: center; padding: 20px; font-size: 13px; color: var(--slate-600); border-top: 1px solid var(--slate-200); background: #fff; margin-top: auto;}
+    .visit-counter { display: inline-block; margin-top: 8px; background: var(--blue-light); border: 1px solid #bfdbfe; color: var(--navy); padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 11px;}
+    .user-badge { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px;}
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay" class="hidden">
+    <div id="loadText" style="margin-bottom:10px; font-size: 18px;">Đang xử lý...</div>
+    <div style="font-size:13px; color:#cbd5e1; font-weight:normal;">(Hệ thống đang kết nối với máy chủ Google)</div>
+  </div>
+  <div id="toastMsg"></div>
+
+  <!-- GIAO DIỆN ĐĂNG NHẬP (Chữ Lê Văn Nguyên được bôi đỏ) -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <!-- Cập nhật Logo MTTQ -->
+      <div class="login-logo">
+        <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/01/Logo-Mat-Tran-To-Quoc-Viet-Nam.png" alt="Logo MTTQ">
+      </div>
+      <h2>CỔNG QUẢN TRỊ</h2>
+      <p>HỆ THỐNG QUẢN LÝ LỊCH VÀ XE CÔNG VỤ</p>
+      <input type="text" id="lgUser" class="login-input" placeholder="Tên đăng nhập (VD: admin)">
+      <input type="password" id="lgPass" class="login-input" placeholder="Mật khẩu truy cập">
+      <button class="btn btn-primary login-btn" onclick="doLogin()">ĐĂNG NHẬP</button>
+    </div>
+    <div class="login-footer">
+      <b>© Bản quyền thuộc <span style="color:#ef4444;">Lê Văn Nguyên</span> - Ủy ban MTTQ Việt Nam thành phố Đồng Nai.</b><br>
+      <span class="visit-counter" id="visitCountLogin">Đang tải số lượt truy cập...</span>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="gov-header no-print">
+    <div class="container header-flex">
+      <div class="brand-box">
+        <div class="brand-icon">
+          <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/01/Logo-Mat-Tran-To-Quoc-Viet-Nam.png" alt="Logo">
+        </div>
+        <div>
+          <div style="font-size: 16.5px; font-weight: 800; text-transform: uppercase;">HỆ THỐNG QUẢN LÝ & PHÂN CÔNG LỊCH XE TỰ ĐỘNG</div>
+          <div style="font-size: 11.5px; color: #bfdbfe;">
+            <b>Bản quyền thuộc về Ủy ban Mặt trận Tổ quốc Việt Nam thành phố Đồng Nai</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="user-badge" id="currentUserDisplay"></div>
+        <button onclick="logout()" class="btn btn-dark" style="font-size:11px; padding:6px 10px;">🚪 Đăng xuất</button>
+
+        <button id="btnApproveBatch" onclick="approveDisplayedSchedules()" class="btn btn-success" style="font-size:12.5px; padding:7px 12px; background-color:#059669;" title="Khóa toàn bộ lịch đang hiển thị thành Bản gốc (Chữ màu đen)">
+          ✅ Chốt Lịch Duyệt (Màu Đen)
+        </button>
+        <button id="btnExportInternal" onclick="previewOfficialWord(false)" class="btn btn-outline" style="font-size:12.5px; padding:7px 12px;">
+          📄 Xuất Lịch Nội Bộ
+        </button>
+        <button id="btnExportOfficial" onclick="previewOfficialWord(true)" class="btn btn-primary" style="font-size:12.5px; padding:7px 12px; background-color:#2563eb;" title="Xuất lịch theo Thể thức Nghị định 30/2020/NĐ-CP">
+          📜 Xem & Xuất Lịch Ban Hành (.docx)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="nav-bar no-print">
+    <div class="container nav-list">
+      <button onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="nav-tab active">1. Điều Phối & Nhập Lịch</button>
+      <button onclick="switchTab('tab-leaders')" id="btn-tab-leaders" class="nav-tab">2. Lãnh Đạo & Đơn Vị</button>
+      <button onclick="switchTab('tab-vehicles')" id="btn-tab-vehicles" class="nav-tab">3. Danh Mục Xe</button>
+      <button onclick="switchTab('tab-drivers')" id="btn-tab-drivers" class="nav-tab">4. Danh Sách Tài Xế</button>
+      <button onclick="switchTab('tab-users')" id="btn-tab-users" class="nav-tab">5. Tài Khoản</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="container main-wrap no-print">
+    <div id="conflictAlertBox" class="alert-box hidden">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-size:14.5px; font-weight:800; color:#991b1b;">⚠️ THÔNG BÁO ĐIỀU PHỐI / PHÁT HIỆN XUNG ĐỘT LỊCH XE</div>
+          <div id="conflictSummaryText" style="color:#b91c1c; font-weight:600; margin-top:3px;"></div>
+        </div>
+        <button onclick="document.getElementById('conflictAlertBox').classList.add('hidden')" class="btn btn-sm btn-danger">Đóng</button>
+      </div>
+      <div id="conflictDetailGrid" class="grid-2" style="background:#fff; padding:10px; border-radius:6px; border:1px solid #fecaca; margin-top:10px;"></div>
+      <div id="conflictResolutionOptions" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+
+    <!-- TAB 1: BẢNG ĐIỀU PHỐI -->
+    <section id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Tổng số xe</div><div id="stat-total" class="stat-val">0</div></div>
+        <div class="stat-card"><div class="stat-label">Đang hoạt động</div><div id="stat-active" class="stat-val" style="color:#059669;">0</div></div>
+        <div class="stat-card"><div class="stat-label">Xe đang phục vụ</div><div id="stat-serving" class="stat-val" style="color:#1d4ed8;">0</div></div>
+        <div class="stat-card"><div class="stat-label">Lịch đang lọc</div><div id="stat-schedules" class="stat-val">0</div></div>
+        <div class="stat-card" style="background:#fef2f2;"><div class="stat-label" style="color:#b91c1c;">Trùng lịch / Chờ duyệt</div><div id="stat-conflicts" class="stat-val" style="color:#dc2626;">0</div></div>
+      </div>
+
+      <div class="work-grid">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" id="formTitle">Nhập Lịch Công Tác Mới</span>
+            <span class="badge st-blue" id="formModeBadge">Điều phối thông minh</span>
+          </div>
+          <form id="scheduleForm" onsubmit="handleScheduleSubmit(event)">
+            <input type="hidden" id="editScheduleId" value="">
+            <div class="form-row">
+              <label>1. Chọn Lãnh đạo / Đơn vị đi công tác *</label>
+              <select id="fLeader" required onchange="onLeaderChange()" style="font-weight:700; color:var(--navy);"></select>
+              <div id="leaderFixedCarHint" style="background:var(--blue-light); color:var(--navy); padding:8px; border-radius:6px; font-size:11.5px; margin-top:6px; border:1px solid #bfdbfe;"></div>
+            </div>
+            <div class="form-row grid-3">
+              <div><label>2. Ngày đi *</label><input type="date" id="fDate" required></div>
+              <div><label>3. Giờ đi *</label><input type="time" id="fStart" required value="08:00"></div>
+              <div><label>4. Giờ về *</label><input type="time" id="fEnd" required value="10:30"></div>
+            </div>
+            <div class="form-row"><label>5. Nội dung công tác *</label><input type="text" id="fContent" required placeholder="VD: Dự hội nghị..."></div>
+            <div class="form-row grid-2">
+              <div><label>6. Điểm xuất phát *</label><input type="text" id="fFrom" required value="Trụ sở Cơ quan"></div>
+              <div><label>7. Địa điểm đến *</label><input type="text" id="fTo" required placeholder="VD: Thành ủy Biên Hòa..."></div>
+            </div>
+            <div class="form-row grid-2">
+              <div><label>8. Cán bộ đi cùng</label><input type="text" id="fCompanions" placeholder="VD: Đ/c An (Văn phòng)..."></div>
+              <div><label>9. Tổng số người đi *</label><input type="number" id="fPassengers" min="1" max="45" value="3" required></div>
+            </div>
+            
+            <div class="form-row grid-2">
+              <div><label>10. Yêu cầu xe (Tùy chọn biển số)</label><select id="fReqVehicle" style="font-weight:700; color:#0f172a;"></select></div>
+              <div>
+                <label>11. Tính chất lưu lịch *</label>
+                <select id="fIsUpdated" style="font-weight:700;">
+                  <option value="FALSE" style="color:var(--navy);">Lịch Mới (Chữ Đen)</option>
+                  <option value="TRUE" style="color:#dc2626;">Lịch Bổ sung / Cập nhật (Chữ Đỏ)</option>
+                </select>
+              </div>
+            </div>
+            
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <button type="submit" id="btnSubmitForm" class="btn btn-primary" style="flex:1; padding:10px;">⚡ Lưu Lịch & Phân Xe</button>
+              <button type="button" id="btnCancelEdit" onclick="resetScheduleForm()" class="btn btn-dark hidden">Hủy sửa</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">BẢNG ĐIỀU KHIỂN PHÂN CÔNG XE TỰ ĐỘNG</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <button onclick="showAllDates()" class="btn btn-sm btn-dark">📅 Xem tất cả ngày</button>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <div><label>Lọc Ngày</label><input type="date" id="filterDate" onchange="showAllDatesFlag=false; renderAll()"></div>
+            <div><label>Lọc Lãnh đạo</label><select id="filterLeader" onchange="renderAll()"></select></div>
+            <div><label>Lọc Trạng thái</label><select id="filterStatus" onchange="renderAll()"><option value="ALL">-- Mọi trạng thái --</option><option value="DA_BO_TRI">Đã bố trí xe</option><option value="CHO_XAC_NHAN">Chờ duyệt</option></select></div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <colgroup><col style="width: 5%;"><col style="width: 10%;"><col style="width: 17%;"><col style="width: 20%;"><col style="width: 11%;"><col style="width: 10%;"><col style="width: 12%;"><col style="width: 15%;"></colgroup>
+              <thead><tr>
+                <th>Ngày / Giờ</th>
+                <th>Lãnh đạo & Cán bộ đi cùng</th>
+                <th>Nội dung & Lộ trình</th>
+                <th>Xe bố trí</th>
+                <th>Trạng thái</th>
+                <th style="text-align:center;">Sắp xếp</th>
+                <th style="text-align:center;">Thao tác</th>
+              </tr></thead>
+              <tbody id="dispatchTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CÁC TAB CÒN LẠI -->
+    <section id="tab-leaders" class="hidden"><div class="card"><div class="card-header"><span class="card-title">Danh Sách Lãnh Đạo & Đơn Vị</span><button id="btnAddLeader" onclick="openLeaderModal()" class="btn btn-primary">+ Thêm Lãnh Đạo / Đơn Vị</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Mã LĐ</th><th>Họ và Tên / Tên Đơn vị</th><th>Chức vụ / Cấp bậc</th><th>Xe Cố định</th><th>Quy chế tự động xếp xe</th><th class="action-col">Thao tác</th></tr></thead><tbody id="tblLeaders"></tbody></table></div></div></section>
+    <section id="tab-vehicles" class="hidden"><div class="card"><div class="card-header"><span class="card-title">Danh Mục Phương Tiện & Quyền Sử Dụng Xe</span><button id="btnAddVehicle" onclick="openVehicleModal()" class="btn btn-primary">+ Thêm Phương Tiện / Xe Cá Nhân</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Biển số / Tên phương tiện</th><th>Nhãn hiệu / Ghi chú</th><th>Loại xe</th><th class="action-col">Thao tác</th></tr></thead><tbody id="tblVehicles"></tbody></table></div></div></section>
+    <section id="tab-drivers" class="hidden"><div class="card"><div class="card-header"><span class="card-title">Danh Sách Tài Xế Phụ Trách & Dự Phòng</span><button id="btnAddDriver" onclick="openDriverModal()" class="btn btn-success">+ Thêm Tài Xế Mới</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Mã TX</th><th>Họ và tên</th><th>SĐT</th><th>Xe phụ trách chính</th><th>Phục vụ</th><th>Tình trạng</th><th class="action-col">Thao tác</th></tr></thead><tbody id="driverTableBody"></tbody></table></div></div></section>
+    <section id="tab-users" class="hidden"><div class="card"><div class="card-header"><span class="card-title">Quản Lý Tài Khoản Quản Trị Hệ Thống</span><button onclick="openUserModal()" class="btn btn-success">+ Thêm Tài Khoản</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Tên đăng nhập</th><th>Quyền</th><th>Họ tên</th><th>Thao tác</th></tr></thead><tbody id="tblUsers"></tbody></table></div></div></section>
+  </main>
+
+  <!-- Giao diện chính Footer -->
+  <footer class="app-footer no-print">
+    <p style="font-weight:700; color:var(--navy); font-size:12.5px;">© Bản quyền thuộc <span style="color:#ef4444;">Lê Văn Nguyên</span> - Ủy ban MTTQ Việt Nam thành phố Đồng Nai.</p>
+    <span class="visit-counter" id="visitCountMain">Đang tải số lượt truy cập...</span>
+  </footer>
+
+  <!-- MODAL THÊM / SỬA -->
+  <div id="crudModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 id="modalTitle" style="margin-bottom:15px; color:var(--navy); font-weight:800;">Thêm / Sửa</h3>
+      <div id="modalBody"></div>
+      <div style="margin-top:20px; display:flex; gap:10px;">
+        <button id="btnSaveModal" class="btn btn-primary" style="flex:1;">Lưu Lên Google Sheets</button>
+        <button onclick="document.getElementById('crudModal').classList.add('hidden')" class="btn btn-danger">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XEM TRƯỚC LỊCH XUẤT WORD -->
+  <div id="previewModal" class="modal-overlay hidden">
+    <div class="preview-modal-content">
+      <div class="preview-header">
+        <h3 style="color:var(--navy); font-size:16px;">Xem trước Lịch Ban Hành</h3>
+        <div style="display:flex; gap:8px;">
+          <button onclick="downloadWordFromPreview()" class="btn btn-success" style="font-size:14px; padding:8px 15px;">⬇️ Tải file Word (.docx)</button>
+          <button onclick="document.getElementById('previewModal').classList.add('hidden')" class="btn btn-danger">Đóng</button>
+        </div>
+      </div>
+      <div class="preview-body">
+        <div id="previewPaper" class="preview-paper"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let appState = { users:[], leaders:[], vehicles:[], schedules:[], drivers:[] };
+    let showAllDatesFlag = false;
+    let currentUser = { username: '', role: '', name: '' }; 
+    let currentPreviewHtml = '';
+    let currentPreviewIsOfficial = true;
+
+    document.getElementById('fDate').valueAsDate = new Date();
+    document.getElementById('filterDate').valueAsDate = new Date();
+
+    window.addEventListener('DOMContentLoaded', () => {
+      google.script.run.withSuccessHandler(count => {
+        const text = `📊 Lượt truy cập hệ thống: ${count}`;
+        document.getElementById('visitCountLogin').innerText = text;
+        document.getElementById('visitCountMain').innerText = text;
+      }).getVisitCount();
+    });
+
+    function showLoad(show, text = 'Đang xử lý...') { 
+      document.getElementById('loadText').innerText = text;
+      document.getElementById('loadingOverlay').classList.toggle('hidden', !show); 
+    }
+    
+    function showToast(msg, isSuccess = false) {
+      const t = document.getElementById('toastMsg');
+      t.innerText = msg; t.style.background = isSuccess ? '#15803d' : '#1e293b'; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    let loginTimeout;
+    function doLogin() {
+      const u = document.getElementById('lgUser').value;
+      const p = document.getElementById('lgPass').value;
+      if (!u || !p) return alert("Vui lòng nhập tài khoản và mật khẩu!");
+
+      showLoad(true, 'Đang kiểm tra thông tin đăng nhập...');
+      
+      loginTimeout = setTimeout(() => {
+        showLoad(false);
+        alert("⏳ LỖI KẾT NỐI: Máy chủ Google không phản hồi. Vui lòng bấm [Triển khai -> Phiên bản mới] và tải lại trang (F5).");
+      }, 15000);
+      
+      google.script.run
+        .withSuccessHandler(resStr => {
+          clearTimeout(loginTimeout); 
+          try {
+            const res = JSON.parse(resStr);
+            if(res && res.success) { 
+              currentUser = res;
+              document.getElementById('currentUserDisplay').innerText = `👤 ${res.name} (${res.role})`;
+              document.getElementById('loginScreen').classList.add('hidden'); 
+              applyPermissions(); 
+              loadData(); 
+            } 
+            else { 
+              showLoad(false); 
+              alert("❌ ĐĂNG NHẬP THẤT BẠI: " + (res.message || "Không xác định")); 
+            }
+          } catch(e) {
+            showLoad(false); 
+            alert("❌ LỖI DỮ LIỆU ĐĂNG NHẬP: " + e.message); 
+          }
+        })
+        .withFailureHandler(err => { 
+          clearTimeout(loginTimeout);
+          showLoad(false); 
+          alert("❌ LỖI MÁY CHỦ GOOGLE:\n" + err.message); 
+        })
+        .loginUser(u, p);
+    }
+
+    function logout() {
+      currentUser = { username: '', role: '', name: '' };
+      document.getElementById('lgPass').value = '';
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    function applyPermissions() {
+      const role = currentUser.role;
+      const isAdmin = role === 'ADMIN';
+      const isApprover = role === 'APPROVER';
+      const isUser = role === 'USER';
+
+      document.getElementById('btn-tab-users').classList.toggle('hidden', !isAdmin);
+      document.getElementById('btn-tab-leaders').classList.toggle('hidden', isUser);
+      document.getElementById('btn-tab-vehicles').classList.toggle('hidden', isUser);
+      document.getElementById('btn-tab-drivers').classList.toggle('hidden', isUser);
+
+      document.getElementById('btnApproveBatch').classList.toggle('hidden', isUser);
+      document.getElementById('btnExportInternal').classList.toggle('hidden', isUser);
+      document.getElementById('btnExportOfficial').classList.toggle('hidden', isUser);
+
+      document.getElementById('btnAddLeader').classList.toggle('hidden', !isAdmin);
+      document.getElementById('btnAddVehicle').classList.toggle('hidden', !isAdmin);
+      document.getElementById('btnAddDriver').classList.toggle('hidden', !isAdmin);
+    }
+
+    function loadData() {
+      showLoad(true, 'Đang tải dữ liệu từ CSDL Google Sheets...');
+      
+      let loadTimeout = setTimeout(() => {
+        showLoad(false);
+        alert("⏳ Mất kết nối khi tải dữ liệu! Vui lòng làm mới trang (F5).");
+      }, 15000);
+
+      google.script.run
+        .withSuccessHandler(responseStr => {
+          clearTimeout(loadTimeout);
+          try {
+            const data = JSON.parse(responseStr);
+            if (data && data.success) {
+              appState = {...appState, ...data}; 
+              renderAll();
+              showLoad(false);
+            } else {
+              showLoad(false);
+              alert("❌ LỖI DỮ LIỆU: " + (data.error || "Không thể nạp dữ liệu"));
+            }
+          } catch(e) {
+            showLoad(false);
+            alert("❌ LỖI GIẢI MÃ DỮ LIỆU: Có ký tự không hợp lệ trong Sheets.\n" + e.message);
+          }
+        })
+        .withFailureHandler(err => { 
+          clearTimeout(loadTimeout);
+          showLoad(false); 
+          alert("❌ MẤT KẾT NỐI VỚI GOOGLE: " + err.message); 
+        })
+        .getDbData();
+    }
+
+    function timeToMinutes(t) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
+    function minutesToTime(mins) { const h = String(Math.floor(mins / 60)).padStart(2, "0"); const m = String(mins % 60).padStart(2, "0"); return `${h}:${m}`; }
+    
+    function checkTimeConflict(startA, endA, bufA, startB, endB, bufB) {
+      const s1 = timeToMinutes(startA), e1 = timeToMinutes(endA);
+      const s2 = timeToMinutes(startB), e2 = timeToMinutes(endB);
+      if (Math.max(s1, s2) < Math.min(e1, e2)) return { isConflict: true, type: "DIRECT", range: `${minutesToTime(Math.max(s1, s2))} đến ${minutesToTime(Math.min(e1, e2))}` };
+      if (Math.max(s1, s2) < Math.min(e1 + Number(bufA || 30), e2 + Number(bufB || 30))) return { isConflict: true, type: "BUFFER", range: `Không đủ ${bufA || 30} phút di chuyển` };
+      return { isConflict: false };
+    }
+
+    function evaluateSchedule(input, ignoreId = null) {
+      const leader = appState.leaders.find(l => l.id === input.leaderId);
+      const sameDay = appState.schedules.filter(s => s.date === input.date && s.id !== ignoreId && s.status !== "DA_HUY");
+      const isAutoAssign = leader.autoAssign !== false && leader.autoAssign !== 'FALSE' && leader.autoAssign !== 'false';
+
+      function isDriverFree(drvId) {
+        if (!drvId || drvId === "TX_TUTUC") return { ok: true, driver: appState.drivers.find(d => d.id === drvId) }; 
+        const d = appState.drivers.find(x => x.id === drvId);
+        if (!d || d.status !== "AVAILABLE") return { ok: false, reason: `TX nghỉ phép` };
+        for (const s of sameDay) {
+          if (s.assignedDriverId === drvId && s.status === "DA_BO_TRI") {
+            const chk = checkTimeConflict(input.start, input.end, input.buffer, s.start, s.end, s.buffer);
+            if (chk.isConflict) return { ok: false, reason: `TX đang bận lái xe khác (${s.start}-${s.end})` };
+          }
+        }
+        return { ok: true, driver: d };
+      }
+
+      function checkVehicle(veh) {
+        if (!veh) return { ok: false, reason: "Chưa chọn xe" };
+        for (const s of sameDay) {
+          if (s.assignedVehicleId === veh.id && s.status === "DA_BO_TRI") {
+            const chk = checkTimeConflict(input.start, input.end, input.buffer, s.start, s.end, s.buffer);
+            if (chk.isConflict) return { ok: false, range: chk.range, reason: `Trùng lịch xe ${veh.plate} từ ${chk.range}` };
+          }
+        }
+        return { ok: true };
+      }
+
+      if (!isAutoAssign) {
+        const reqVehObj = appState.vehicles.find(v => v.id === input.reqVehicle);
+        const alertPayload = { fixedPlate: reqVehObj ? `Đề xuất: ${reqVehObj.plate}` : "Chưa chỉ định", newLeader: `${leader.title} - ${leader.name}`, newContent: `${input.content}`, reason: "Theo quy định: Lãnh đạo các ban KHÔNG TỰ ĐỘNG PHÂN XE.", range: `${input.start} - ${input.end}`, currentLeader: "Chờ Văn phòng điều phối", currentInfo: `Cán bộ đi cùng: ${input.companions || "Không ghi"}`, candidates: [] };
+        return { fixedPlate: reqVehObj ? `Yêu cầu: ${reqVehObj.plate}` : "Không tự động", assignedVehicleId: "", assignedDriverId: "", status: "CHO_XAC_NHAN", reason: "Lãnh đạo các ban: Không tự động phân xe", plan: reqVehObj ? `Đề xuất xin xe ${reqVehObj.plate} - Chờ duyệt` : "Chờ Văn phòng duyệt", resultText: "CHỜ XÉT DUYỆT (CÁC BAN)", alertPayload };
+      }
+
+      let priorityOrderIds = [];
+      let fixedLabel = "";
+      if (input.reqVehicle && input.reqVehicle !== "AUTO" && input.reqVehicle !== "NONE") {
+        const chosenVeh = appState.vehicles.find(v => v.id === input.reqVehicle);
+        fixedLabel = chosenVeh ? `${chosenVeh.plate} (Chọn đích danh)` : "";
+        priorityOrderIds = [input.reqVehicle, ...appState.vehicles.map(v=>v.id).filter(id => id !== input.reqVehicle)];
+      } else {
+        const defVeh = appState.vehicles.find(v => v.id === leader.fixedVehicleId);
+        fixedLabel = defVeh ? defVeh.plate : "Tự động phân bổ";
+        priorityOrderIds = leader.fixedVehicleId ? [leader.fixedVehicleId, ...appState.vehicles.map(v=>v.id)] : appState.vehicles.map(v=>v.id);
+        priorityOrderIds = [...new Set(priorityOrderIds)]; 
+      }
+
+      let primaryConflictReason = "";
+      for (let i = 0; i < priorityOrderIds.length; i++) {
+        const vehId = priorityOrderIds[i];
+        const vehObj = appState.vehicles.find(v => v.id === vehId);
+        const vCheck = checkVehicle(vehObj);
+        if (vCheck.ok) {
+          const dCheck = isDriverFree(vehObj.driverId);
+          if (dCheck.ok) {
+            const drvId = dCheck.driver ? dCheck.driver.id : "";
+            const drvName = dCheck.driver ? `TX ${dCheck.driver.name}` : "(Phương tiện tự túc)";
+            const planNote = (i === 0) ? `Bố trí xe ${vehObj.plate} & ${drvName}` : `Tự động chuyển sang xe ${vehObj.plate}`;
+            return { fixedPlate: fixedLabel, assignedVehicleId: vehObj.id, assignedDriverId: drvId, status: "DA_BO_TRI", reason: (i === 0) ? "Đủ điều kiện" : primaryConflictReason, plan: planNote, resultText: `ĐÃ BỐ TRÍ XE (${vehObj.plate})`, alertPayload: null };
+          } else {
+            if (i === 0) primaryConflictReason = `Xe ${vehObj.plate} trống nhưng ${dCheck.reason}`;
+          }
+        } else {
+          if (i === 0) primaryConflictReason = vCheck.reason;
+        }
+      }
+
+      const alertPayload = { fixedPlate: fixedLabel, newLeader: `${leader.title} - ${leader.name}`, newContent: `${input.content}`, reason: primaryConflictReason + ". Các xe khác cũng bận/thiếu tài xế.", range: `${input.start} - ${input.end}`, currentLeader: "Tất cả xe đang bận", currentInfo: "Không còn xe trống", candidates: [] };
+      return { fixedPlate: fixedLabel, assignedVehicleId: "", assignedDriverId: "", status: "HET_XE", reason: primaryConflictReason + " (Hết xe/TX).", plan: "Mượn/Thuê xe ngoài", resultText: "TRÙNG LỊCH", alertPayload };
+    }
+
+    function onLeaderChange() {
+      const lid = document.getElementById("fLeader").value;
+      const leader = appState.leaders.find(x => x.id === lid);
+      const reqSelect = document.getElementById("fReqVehicle");
+      const hintBox = document.getElementById("leaderFixedCarHint");
+      const badge = document.getElementById("formModeBadge");
+      const submitBtn = document.getElementById("btnSubmitForm");
+
+      if (!leader) return;
+      let optionsHTML = "";
+      const isAuto = leader.autoAssign !== false && leader.autoAssign !== 'FALSE' && leader.autoAssign !== 'false';
+      
+      if (isAuto) {
+        const fixedVeh = appState.vehicles.find(v => v.id === leader.fixedVehicleId);
+        optionsHTML += `<option value="AUTO">-- Tự động ưu tiên (${fixedVeh ? fixedVeh.plate : "Tất cả xe"}) --</option>`;
+      } else {
+        optionsHTML += `<option value="NONE">-- Chờ Văn phòng bố trí xe --</option>`;
+      }
+
+      appState.vehicles.forEach(v => { optionsHTML += `<option value="${v.id}">Chọn: ${v.plate} - ${v.brand}</option>`; });
+      reqSelect.innerHTML = optionsHTML;
+
+      if (!isAuto) {
+        hintBox.style.background = "#fff7ed"; hintBox.style.borderColor = "#fdba74"; hintBox.style.color = "#9a3412";
+        hintBox.innerHTML = `⚠️ Hệ thống <b>KHÔNG tự động phân xe</b>. Lịch sẽ chờ xét duyệt.`;
+        badge.className = "badge st-orange"; badge.innerText = "Không tự động phân xe";
+        if (!document.getElementById("editScheduleId").value) {
+            submitBtn.innerText = "📝 Lưu Lịch (Chờ Điều Phối)";
+            submitBtn.className = "btn btn-warning";
+        }
+      } else {
+        hintBox.style.background = "var(--blue-light)"; hintBox.style.borderColor = "#bfdbfe"; hintBox.style.color = "var(--navy)";
+        hintBox.innerHTML = `🚗 ${leader.policyNote || 'Được tự động sử dụng xe theo tiêu chuẩn.'}`;
+        badge.className = "badge st-blue"; badge.innerText = "Tự động phân xe";
+        if (!document.getElementById("editScheduleId").value) {
+            submitBtn.innerText = "⚡ Lưu & Cấp Xe Tự Động";
+            submitBtn.className = "btn btn-primary";
+        }
+      }
+    }
+
+    function getStatusBadge(status) {
+      const map = { "DA_BO_TRI": { cls: "st-green", text: "ĐÃ BỐ TRÍ XE" }, "CHO_XAC_NHAN": { cls: "st-blue", text: "CHỜ DUYỆT XE" }};
+      const st = map[status] || { cls: "st-gray", text: status };
+      return `<span class="badge ${st.cls}">${st.text}</span>`;
+    }
+
+    function getSortedFilteredSchedules() {
+      const filterDate = document.getElementById("filterDate").value;
+      const flL = document.getElementById("filterLeader") ? document.getElementById("filterLeader").value : "ALL";
+      
+      const listByDate = showAllDatesFlag ? appState.schedules : appState.schedules.filter(s => s.date === filterDate);
+      
+      let filtered = listByDate.filter(s => {
+        if (flL !== "ALL" && s.leaderId !== flL) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        if (a.date === b.date) {
+            let sortA = Number(a.sortIndex) || (timeToMinutes(a.start) * 10000);
+            let sortB = Number(b.sortIndex) || (timeToMinutes(b.start) * 10000);
+            return sortA - sortB;
+        }
+        return (a.date > b.date) ? 1 : -1;
+      });
+
+      return filtered;
+    }
+
+    function renderAll() {
+      try {
+        const fLeader = document.getElementById("fLeader");
+        const curL = fLeader.value;
+        fLeader.innerHTML = (appState.leaders || []).map((l, i) => `<option value="${l.id}">${i + 1}. ${l.title} - ${l.name}</option>`).join("");
+        if (curL && (appState.leaders || []).some(x => x.id === curL)) fLeader.value = curL;
+        if (!document.getElementById("fReqVehicle").innerHTML.trim()) onLeaderChange();
+
+        document.getElementById("filterLeader").innerHTML = `<option value="ALL">-- Tất cả Lãnh đạo --</option>` + (appState.leaders || []).map(l => `<option value="${l.id}">${l.name}</option>`).join("");
+        
+        const filtered = getSortedFilteredSchedules();
+
+        document.getElementById("stat-total").innerText = (appState.vehicles || []).length;
+        document.getElementById("stat-schedules").innerText = filtered.length;
+
+        const isAdmin = currentUser.role === 'ADMIN';
+        const isApprover = currentUser.role === 'APPROVER';
+        const canManageSchedules = isAdmin || isApprover; 
+
+        document.querySelectorAll('.action-col').forEach(el => el.classList.toggle('hidden', !isAdmin));
+
+        document.getElementById("dispatchTableBody").innerHTML = filtered.map((s, idx) => {
+          const l = (appState.leaders || []).find(x => x.id === s.leaderId);
+          const v = (appState.vehicles || []).find(x => x.id === s.assignedVehicleId);
+          const d = (appState.drivers || []).find(x => x.id === s.assignedDriverId);
+          const isUpdatedStr = (s.isUpdated === "TRUE" || s.isUpdated === true) ? `<br><span style="color:#dc2626; font-weight:800; font-size:10.5px; background:#fee2e2; padding:2px 4px; border-radius:3px;">🔥 BẢN CẬP NHẬT</span>` : "";
+
+          const btnDuyetXe = (s.status === "CHO_XAC_NHAN" && canManageSchedules) ? `<button onclick="approveCandidate('${s.id}')" class="btn btn-sm btn-primary">✔ Duyệt cấp xe</button>` : "";
+          
+          const moveBtns = canManageSchedules ? `
+            <div style="display:flex; justify-content:center; gap:4px;">
+              <button onclick="moveSchedule('${s.id}', 'up')" class="btn-move" ${idx === 0 ? 'disabled style="opacity:0.3;"' : ''}>⬆️</button>
+              <button onclick="moveSchedule('${s.id}', 'down')" class="btn-move" ${idx === filtered.length - 1 ? 'disabled style="opacity:0.3;"' : ''}>⬇️</button>
+            </div>
+          ` : "";
+
+          return `
+            <tr>
+              <td>
+                <b>${s.start} - ${s.end}</b>
+                <div style="font-size:11px; color:#475569;">${s.date.split("-").reverse().join("/")}</div>
+              </td>
+              <td><b style="color:var(--navy);">${l ? l.title : ""}</b><div style="font-weight:700;">${l ? l.name : ""}</div><div style="font-size:11px; color:#0f766e; margin-top:3px;">👥 Cùng đi: ${s.companions || 'Không'}</div></td>
+              <td><b>${s.content}</b> ${isUpdatedStr}<div style="color:#475569; margin-top:2px;">📍 ${s.from} → <b>${s.to}</b></div></td>
+              <td>
+                ${v ? `<b style="color:#15803d; font-size:12.5px;">${v.plate}</b>` : `<span style="color:#dc2626; font-style:italic;">Chưa phân xe</span>`}
+                <br><span style="color:#475569; font-size:11px;">${d ? d.name : ""}</span>
+              </td>
+              <td>${getStatusBadge(s.status)}</td>
+              <td style="text-align:center;">${moveBtns}</td>
+              <td style="text-align:center;">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  ${btnDuyetXe}
+                  <div style="display:flex; gap:3px; justify-content:center;">
+                    <button onclick="editSchedule('${s.id}')" class="btn btn-sm" style="background:#e2e8f0; color:#000;">Sửa</button>
+                    <button class="btn btn-sm btn-danger" onclick="delRecord('Schedules','${s.id}','id')">Xóa</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join(""); 
+
+        const actionHtmlL = isAdmin ? l => `<td><div style="display:flex; gap:3px;"><button class="btn btn-sm btn-primary" onclick='openLeaderModal(${JSON.stringify(l)})'>Sửa</button> <button class="btn btn-sm btn-danger" onclick="delRecord('Leaders','${l.id}','id')">Xóa</button></div></td>` : () => '';
+        document.getElementById('tblLeaders').innerHTML = (appState.leaders || []).map(l => `<tr><td><b>${l.id}</b></td><td><b>${l.name}</b></td><td>${l.title}</td><td>${l.fixedVehicleId || 'Không'}</td><td><span class="badge ${l.autoAssign==='FALSE' || l.autoAssign===false ? 'st-orange' : 'st-blue'}">${l.autoAssign==='FALSE' || l.autoAssign===false ? 'CHỜ XÉT DUYỆT' : 'TỰ ĐỘNG PHÂN XE'}</span></td>${actionHtmlL(l)}</tr>`).join('');
+        
+        const actionHtmlV = isAdmin ? v => `<td><div style="display:flex; gap:3px;"><button class="btn btn-sm btn-primary" onclick='openVehicleModal(${JSON.stringify(v)})'>Sửa</button> <button class="btn btn-sm btn-danger" onclick="delRecord('Vehicles','${v.id}','id')">Xóa</button></div></td>` : () => '';
+        document.getElementById('tblVehicles').innerHTML = (appState.vehicles || []).map(v => `<tr><td><b style="color:var(--navy);">${v.plate}</b></td><td>${v.brand}</td><td>${v.type}</td>${actionHtmlV(v)}</tr>`).join('');
+        
+        const actionHtmlD = isAdmin ? d => `<td><div style="display:flex; gap:3px;"><button class="btn btn-sm btn-dark" onclick="toggleDriverStatus('${d.id}')">Đổi</button><button class="btn btn-sm btn-primary" onclick='openDriverModal(${JSON.stringify(d)})'>Sửa</button><button class="btn btn-sm btn-danger" onclick="delRecord('Drivers','${d.id}','id')">Xóa</button></div></td>` : () => '';
+        document.getElementById('driverTableBody').innerHTML = (appState.drivers || []).map(d => `<tr><td><b>${d.id}</b></td><td><b>${d.name}</b></td><td>${d.phone}</td><td>${d.vehicleId}</td><td>${d.servedLeaders}</td><td>${d.status === 'AVAILABLE' ? '<span class="badge st-green">SẴN SÀNG</span>' : '<span class="badge st-gray">NGHỈ PHÉP</span>'}</td>${actionHtmlD(d)}</tr>`).join('');
+        
+        document.getElementById('tblUsers').innerHTML = (appState.users || []).map(u => `<tr><td><b>${u.username}</b></td><td>${u.role}</td><td>${u.name}</td><td><button class="btn btn-sm btn-primary" onclick='openUserModal(${JSON.stringify(u)})'>Sửa</button> <button class="btn btn-sm btn-danger" onclick="delRecord('Users','${u.username}','username')">Xóa</button></td></tr>`).join('');
+      } catch (e) {
+        console.error("Lỗi khi render: ", e);
+      }
+    }
+
+    function moveSchedule(id, direction) {
+      const filtered = getSortedFilteredSchedules();
+      const index = filtered.findIndex(s => s.id === id);
+      if (index === -1) return;
+
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= filtered.length) return;
+
+      const currentItem = filtered[index];
+      const targetItem = filtered[targetIndex];
+
+      let currentSort = Number(currentItem.sortIndex) || (timeToMinutes(currentItem.start) * 10000);
+      let targetSort = Number(targetItem.sortIndex) || (timeToMinutes(targetItem.start) * 10000);
+
+      if (currentSort === targetSort) {
+          if (direction === 'up') currentSort -= 10;
+          else currentSort += 10;
+      }
+
+      currentItem.sortIndex = targetSort;
+      targetItem.sortIndex = currentSort;
+
+      const idx1 = appState.schedules.findIndex(s => s.id === currentItem.id);
+      const idx2 = appState.schedules.findIndex(s => s.id === targetItem.id);
+      if(idx1 > -1) appState.schedules[idx1] = currentItem;
+      if(idx2 > -1) appState.schedules[idx2] = targetItem;
+
+      renderAll();
+      google.script.run.saveRecord('Schedules', currentItem, 'id');
+      google.script.run.saveRecord('Schedules', targetItem, 'id');
+    }
+
+    function showConflictBanner(alertData, scheduleId) {
+      const box = document.getElementById("conflictAlertBox");
+      if (!alertData) { box.classList.add("hidden"); return; }
+      box.classList.remove("hidden");
+      document.getElementById("conflictSummaryText").innerText = alertData.reason;
+      document.getElementById("conflictDetailGrid").innerHTML = `
+        <div><div style="font-size:11px; color:#64748b; font-weight:700;">TRẠNG THÁI HIỆN TẠI</div><div><b>Tình trạng:</b> ${alertData.currentLeader}</div><div><b>Chi tiết:</b> ${alertData.currentInfo}</div></div>
+        <div><div style="font-size:11px; color:#64748b; font-weight:700;">LỊCH YÊU CẦU MỚI</div><div><b>Lãnh đạo:</b> <b style="color:var(--navy);">${alertData.newLeader}</b></div><div><b>Nội dung:</b> ${alertData.newContent}</div></div>
+      `;
+      if(currentUser.role === 'ADMIN' || currentUser.role === 'APPROVER') {
+          document.getElementById("conflictResolutionOptions").innerHTML = `<button type="button" onclick="approveCandidate('${scheduleId}')" class="btn btn-primary">✔ Duyệt Cấp Xe</button>`;
+      } else {
+          document.getElementById("conflictResolutionOptions").innerHTML = `<i>Bạn không có quyền duyệt xe. Vui lòng chờ Văn phòng phản hồi.</i>`;
+      }
+    }
+
+    function approveCandidate(schId) {
+      const s = appState.schedules.find(x => x.id === schId);
+      if (!s) return;
+      const chosenPlate = prompt("Nhập mã Xe hoặc Biển số duyệt cấp (VD: V01, 60A 002.02, Phương tiện tự túc):", "V01");
+      if (!chosenPlate) return;
+      let v = appState.vehicles.find(x => x.id.toLowerCase() === chosenPlate.trim().toLowerCase() || x.plate.toLowerCase() === chosenPlate.trim().toLowerCase());
+      if(!v) return alert("Không tìm thấy xe này trong hệ thống!");
+      let d = appState.drivers.find(x => x.id === v.driverId) || null;
+
+      s.assignedVehicleId = v.id;
+      s.assignedDriverId = d ? d.id : "";
+      s.status = "DA_BO_TRI";
+      s.plan = `Đã duyệt xe ${v.plate}`;
+      s.resultText = `ĐÃ BỐ TRÍ XE (${v.plate})`;
+      s.isUpdated = "TRUE";
+      
+      document.getElementById("conflictAlertBox").classList.add("hidden");
+      saveRecord('Schedules', s, 'id');
+    }
+
+    function handleScheduleSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById("editScheduleId").value;
+      const isRedFlag = document.getElementById("fIsUpdated").value; 
+      
+      const input = {
+        date: document.getElementById("fDate").value, start: document.getElementById("fStart").value, end: document.getElementById("fEnd").value,
+        buffer: 30, leaderId: document.getElementById("fLeader").value,
+        companions: document.getElementById("fCompanions").value.trim(), content: document.getElementById("fContent").value.trim(),
+        from: document.getElementById("fFrom").value.trim(), to: document.getElementById("fTo").value.trim(),
+        passengers: Number(document.getElementById("fPassengers").value), reqVehicle: document.getElementById("fReqVehicle").value
+      };
+
+      if (timeToMinutes(input.start) >= timeToMinutes(input.end)) return alert("Giờ kết thúc phải lớn hơn Giờ khởi hành!");
+
+      const res = evaluateSchedule(input, editId || null);
+
+      if (editId) {
+        const idx = appState.schedules.findIndex(s => s.id === editId);
+        if (idx !== -1) {
+          appState.schedules[idx] = { ...appState.schedules[idx], ...input, ...res, isUpdated: isRedFlag };
+          saveRecord('Schedules', appState.schedules[idx], 'id');
+        }
+      } else {
+        const nextNum = appState.schedules.length + 1;
+        const newId = "LICH-" + String(nextNum).padStart(3, "0") + "-" + Math.floor(10 + Math.random() * 89);
+        const newSortIndex = timeToMinutes(input.start) * 10000 + Math.floor(Math.random()*1000);
+        
+        const newSchedule = { id: newId, ...input, ...res, isUpdated: isRedFlag, sortIndex: newSortIndex };
+        if (res.status === 'HET_XE' || res.status === 'CHO_XAC_NHAN') showConflictBanner(res.alertPayload, newId);
+        else document.getElementById("conflictAlertBox").classList.add("hidden");
+        saveRecord('Schedules', newSchedule, 'id');
+      }
+
+      document.getElementById("filterDate").value = input.date;
+      showAllDatesFlag = false;
+      resetScheduleForm();
+    }
+
+    function editSchedule(id) {
+      const s = appState.schedules.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById("editScheduleId").value = s.id;
+      document.getElementById("fLeader").value = s.leaderId;
+      onLeaderChange();
+      document.getElementById("fDate").value = s.date;
+      document.getElementById("fStart").value = s.start;
+      document.getElementById("fEnd").value = s.end;
+      document.getElementById("fContent").value = s.content;
+      document.getElementById("fFrom").value = s.from;
+      document.getElementById("fTo").value = s.to;
+      document.getElementById("fCompanions").value = s.companions || "";
+      document.getElementById("fPassengers").value = s.passengers;
+      
+      document.getElementById("fIsUpdated").value = "TRUE";
+      document.getElementById("formTitle").innerText = "Sửa Lịch: " + s.id;
+      document.getElementById("btnSubmitForm").innerText = "💾 Cập nhật Lịch (Đổi màu Đỏ)";
+      document.getElementById("btnSubmitForm").className = "btn btn-danger";
+      document.getElementById("btnCancelEdit").classList.remove("hidden");
+      window.scrollTo(0,0);
+    }
+
+    function resetScheduleForm() {
+      document.getElementById("editScheduleId").value = "";
+      document.getElementById("fContent").value = "";
+      document.getElementById("fTo").value = "";
+      document.getElementById("fCompanions").value = "";
+      
+      document.getElementById("fIsUpdated").value = "FALSE";
+      document.getElementById("formTitle").innerText = "Nhập Lịch Công Tác Mới";
+      document.getElementById("btnSubmitForm").className = "btn btn-primary";
+      document.getElementById("btnSubmitForm").innerText = "⚡ Lưu Lịch & Phân Xe";
+      document.getElementById("btnCancelEdit").classList.add("hidden");
+      onLeaderChange();
+    }
+
+    function saveRecord(sheet, data, idField) {
+      const listName = sheet.toLowerCase();
+      let index = appState[listName].findIndex(item => item[idField] == data[idField]);
+      if (index > -1) appState[listName][index] = data; else appState[listName].push(data);
+      renderAll(); 
+      showToast(`Đang đồng bộ lên Google Sheets...`);
+      google.script.run.withSuccessHandler(() => showToast('✅ Đã lưu thành công!', true)).withFailureHandler(err => alert('❌ LỖI LƯU: ' + err.message)).saveRecord(sheet, data, idField);
+    }
+
+    function delRecord(sheet, idVal, idField) {
+      if(!confirm('Chủ nhân có chắc chắn muốn xóa bản ghi này?')) return;
+      appState[sheet.toLowerCase()] = appState[sheet.toLowerCase()].filter(item => item[idField] != idVal);
+      renderAll();
+      showToast(`Đang xóa khỏi Google Sheets...`);
+      google.script.run.withSuccessHandler(() => showToast('✅ Xóa thành công!', true)).withFailureHandler(err => alert('❌ LỖI XÓA: ' + err.message)).deleteRecord(sheet, idVal, idField);
+    }
+
+    function toggleDriverStatus(id) {
+      let d = appState.drivers.find(x => x.id === id);
+      if(d) { d.status = d.status === 'AVAILABLE' ? 'ON_LEAVE' : 'AVAILABLE'; saveRecord('Drivers', d, 'id'); }
+    }
+
+    function approveDisplayedSchedules() {
+      const filtered = getSortedFilteredSchedules();
+      if (filtered.length === 0) return alert("Không có lịch nào đang hiển thị trên bảng để chốt!");
+      if(!confirm(`CHỐT LỊCH GỐC (MÀU ĐEN)?\n\nThao tác này sẽ chuyển đổi toàn bộ Lịch đang hiển thị thành CHỮ MÀU ĐEN (Bản Gốc).\nNhững lịch đăng ký sau thời điểm này sẽ được tự động nhận diện là bản Cập Nhật (Màu Đỏ).`)) return;
+
+      showLoad(true, 'Đang chốt lịch...');
+      const idsToApprove = filtered.map(s => s.id);
+      
+      appState.schedules.forEach(s => {
+        if (idsToApprove.includes(s.id)) s.isUpdated = "FALSE";
+      });
+      renderAll();
+
+      google.script.run
+        .withSuccessHandler(() => { showLoad(false); showToast('✅ Đã chốt lịch thành công! (Màu Đen)', true); })
+        .withFailureHandler(err => { showLoad(false); alert("LỖI KHI CHỐT LỊCH: " + err.message); loadData(); })
+        .approveSchedulesBatch(idsToApprove);
+    }
+
+    function generateWordHTML(isOfficial) {
+      const filtered = getSortedFilteredSchedules();
+      if (filtered.length === 0) { alert("Chủ nhân ơi, không có dữ liệu lịch nào trên bảng để xuất file ạ!"); return null; }
+
+      const schedulesByDate = {};
+      filtered.forEach(s => {
+        if (!schedulesByDate[s.date]) schedulesByDate[s.date] = [];
+        schedulesByDate[s.date].push(s);
+      });
+
+      const dayNames = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+
+      let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Lịch Công Tác</title></head><body style="font-family: 'Times New Roman', Times, serif; font-size: 14pt;">`;
+
+      if (isOfficial) {
+        html += `
+          <table width="100%" style="border: none; font-family: 'Times New Roman'; font-size: 13pt; margin-bottom: 20px;">
+            <tr>
+              <td width="40%" align="center" valign="top">
+                <span style="font-size: 12pt;">ỦY BAN MTTQ VIỆT NAM<br>THÀNH PHỐ ĐỒNG NAI</span><br>
+                <b>BAN THƯỜNG TRỰC</b><br>
+                <hr style="width: 40%; border-top: 1px solid black; margin-top: 5px;">
+                Số: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/TB-MTTQ-BTT
+              </td>
+              <td width="60%" align="center" valign="top">
+                <b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br>
+                <b>Độc lập - Tự do - Hạnh phúc</b><br>
+                <hr style="width: 50%; border-top: 1px solid black; margin-top: 5px;">
+                <br>
+                <i style="font-size: 13pt;">Đồng Nai, ngày ..... tháng ..... năm 202...</i>
+              </td>
+            </tr>
+          </table>
+          <h2 style="text-align: center; font-family: 'Times New Roman'; font-size: 14pt; font-weight: bold; margin-bottom: 5px;">THÔNG BÁO<br>Lịch làm việc của Thường trực Đảng ủy và Ban Thường trực<br>Ủy ban MTTQ Việt Nam thành phố Đồng Nai</h2>
+          <p style="text-align: center; font-family: 'Times New Roman'; font-size: 13pt; margin-top: 0px; font-style: italic; margin-bottom: 15px;">(Từ ngày .... đến ngày ....)</p>
+        `;
+      } else {
+        html += `<h2 style="text-align: center; color: #1e3a8a; font-family: 'Times New Roman'; margin-bottom: 15px;">BẢNG LỊCH CÔNG TÁC NỘI BỘ</h2>`;
+      }
+      
+      html += `
+        <table border="1" style="border-collapse: collapse; width: 100%; font-size: 13pt; font-family: 'Times New Roman';">
+          <thead>
+            <tr style="background-color: #f2f2f2; font-weight: bold; text-align: center;">
+              <th style="padding: 8px; width: 14%;">Ngày</th>
+              <th style="padding: 8px; width: 10%;">Thời gian</th>
+              <th style="padding: 8px; width: 51%;">Nội dung, thành phần</th>
+              <th style="padding: 8px; width: 25%;">Địa điểm</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      for (const date in schedulesByDate) {
+        const schList = schedulesByDate[date];
+        const dateObj = new Date(date);
+        const dayStr = `<b>${dayNames[dateObj.getDay()]}</b><br>(${dateObj.getDate()}/${dateObj.getMonth() + 1})`;
+
+        schList.forEach((s, index) => {
+          const isRed = (s.isUpdated === "TRUE" || s.isUpdated === true);
+          const colorStyle = isRed ? "color: red;" : "color: black;";
+          
+          const l = appState.leaders.find(x => x.id === s.leaderId);
+          const leaderStr = l ? `<b>Đ/c ${l.name} - ${l.title}</b><br>` : "";
+          const companionStr = s.companions ? `<br><i>Cùng dự:</i> ${s.companions}` : "";
+
+          html += `<tr style="${colorStyle}">`;
+          if (index === 0) html += `<td rowspan="${schList.length}" style="padding: 8px; text-align:center; vertical-align:middle; ${colorStyle}">${dayStr}</td>`;
+          html += `
+            <td style="padding: 8px; text-align:center; font-weight:bold; vertical-align:top;">${s.start}</td>
+            <td style="padding: 8px; text-align:justify; vertical-align:top;">${leaderStr}${s.content}${companionStr}</td>
+            <td style="padding: 8px; text-align:center; vertical-align:top;">${s.to}</td>
+          </tr>`;
+        });
+      }
+      
+      html += `</tbody></table>`;
+
+      if (isOfficial) {
+        html += `
+          <p style="text-align: justify; font-family: 'Times New Roman'; font-size: 13pt; margin-top: 15px;">
+            <b><i>* Lưu ý:</i></b> <i>Lịch làm việc thay cho Thư mời họp. Các Ban, đơn vị tham mưu giúp việc Cơ quan đăng ký lịch và nội dung họp Ban Thường trực <b>gửi trước 16h00 ngày thứ năm hằng tuần</b>.</i>
+          </p>
+          <table width="100%" style="border: none; font-family: 'Times New Roman'; font-size: 12pt; margin-top: 20px;">
+            <tr>
+              <td width="50%" valign="top">
+                <b><i>Nơi nhận:</i></b><br>
+                - Thường trực Thành ủy (Báo cáo);<br>
+                - Thường trực HĐND, UBND thành phố;<br>
+                - BTT UBMTTQVN thành phố;<br>
+                - Văn phòng và các Ban Đảng Thành ủy;<br>
+                - Văn phòng và các Ban UBMTTQVN thành phố;<br>
+                - Các Tổ chức thành viên;<br>
+                - BTT.UBMTTQVN các phường, xã;<br>
+                - Lưu: VT.
+              </td>
+              <td width="50%" align="center" valign="top">
+                <b>TL. BAN THƯỜNG TRỰC</b><br>
+                <b>PHÓ CHÁNH VĂN PHÒNG</b><br><br><br><br><br>
+                <b>Vũ Minh Dũng</b>
+              </td>
+            </tr>
+          </table>
+        `;
+      }
+      return html;
+    }
+
+    function previewOfficialWord(isOfficial) {
+      const htmlContent = generateWordHTML(isOfficial);
+      if (!htmlContent) return;
+      currentPreviewHtml = htmlContent;
+      document.getElementById('previewPaper').innerHTML = htmlContent;
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function downloadWordFromPreview() {
+      const fullHtml = currentPreviewHtml + "</body></html>";
+      const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; 
+      link.download = `Lich_Cong_Tac_DongNai_${new Date().getTime()}.doc`;
+      document.body.appendChild(link); 
+      link.click(); 
+      document.body.removeChild(link);
+      document.getElementById('previewModal').classList.add('hidden');
+    }
+
+    function openModal(title, fields, data, saveCallback) {
+      document.getElementById('modalTitle').innerText = title;
+      let html = '';
+      fields.forEach(f => {
+        html += `<label style="font-weight:bold;font-size:12px; margin-top:12px; display:block;">${f.label}</label>`;
+        if (f.type === 'select') {
+          html += `<select id="mod_${f.id}" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">`;
+          f.options.forEach(opt => {
+            const isSelected = (data && data[f.id] === opt.val) || (!data && f.default === opt.val);
+            html += `<option value="${opt.val}" ${isSelected ? 'selected' : ''}>${opt.text}</option>`;
+          });
+          html += `</select>`;
+        } else {
+          html += `<input id="mod_${f.id}" value="${data ? (data[f.id]||'') : (f.default||'')}" ${data && f.readonly ? 'disabled' : ''}>`;
+        }
+      });
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('btnSaveModal').onclick = () => {
+        let result = data ? {...data} : {};
+        fields.forEach(f => { if(!f.readonly || !data) result[f.id] = document.getElementById(`mod_${f.id}`).value; });
+        saveCallback(result);
+        document.getElementById('crudModal').classList.add('hidden');
+      };
+      document.getElementById('crudModal').classList.remove('hidden');
+    }
+
+    function openLeaderModal(l) { openModal(l ? 'Sửa Lãnh Đạo' : 'Thêm Lãnh Đạo', [{id:'id', label:'Mã LĐ (VD: LD06)', readonly: !!l}, {id:'name', label:'Họ và tên'}, {id:'title', label:'Chức vụ'}, {id:'fixedVehicleId', label:'Mã Xe Cố Định (VD: V01)'},{id:'autoAssign', label:'Hệ thống tự động xếp xe?', type:'select', options:[{val:'TRUE', text:'Có - Tự động'},{val:'FALSE', text:'Không - Chờ xét duyệt'}], default: 'TRUE'},{id:'policyNote', label:'Ghi chú sử dụng'}], l, res => saveRecord('Leaders', res, 'id')); }
+    function openVehicleModal(v) { openModal(v ? 'Sửa Phương Tiện' : 'Thêm Phương Tiện', [{id:'id', label:'Mã Xe (VD: V04, V_CANHAN)', readonly: !!v}, {id:'plate', label:'Biển số / Tên phương tiện'}, {id:'brand', label:'Nhãn hiệu / Ghi chú'}, {id:'type', label:'Loại xe'}], v, res => saveRecord('Vehicles', res, 'id')); }
+    function openUserModal(u) { openModal(u ? 'Sửa Tài Khoản' : 'Thêm Tài Khoản', [{id:'username', label:'Tên đăng nhập', readonly: !!u}, {id:'password', label:'Mật khẩu'}, {id:'role', label:'Quyền truy cập', type:'select', options:[{val:'ADMIN', text:'ADMIN (Quản trị tối cao)'},{val:'APPROVER', text:'APPROVER (Được Duyệt & Chốt lịch)'},{val:'USER', text:'USER (Chỉ được đăng ký lịch)'}], default: 'USER'}, {id:'name', label:'Họ tên hiển thị'}], u, res => saveRecord('Users', res, 'username')); }
+    function openDriverModal(d) { openModal(d ? 'Sửa Tài Xế' : 'Thêm Tài Xế', [{id:'id', label:'Mã TX (VD: TX03)', readonly: !!d}, {id:'name', label:'Họ và tên'}, {id:'phone', label:'Số điện thoại'}, {id:'license', label:'Hạng bằng lái'},{id:'vehicleId', label:'Xe phụ trách'},{id:'servedLeaders', label:'Phục vụ'},{id:'status', label:'Trạng thái', type:'select', options:[{val:'AVAILABLE',text:'Sẵn sàng'},{val:'ON_LEAVE',text:'Nghỉ phép'}], default: 'AVAILABLE'}], d, res => saveRecord('Drivers', res, 'id')); }
+
+    function showAllDates() { showAllDatesFlag = true; renderAll(); }
+    function switchTab(tabId) { ['tab-dashboard', 'tab-leaders', 'tab-vehicles', 'tab-drivers', 'tab-users'].forEach(id => { document.getElementById(id).classList.add('hidden'); document.getElementById('btn-'+id)?.classList.remove('active'); }); document.getElementById(tabId).classList.remove('hidden'); document.getElementById('btn-'+tabId)?.classList.add('active'); }
+  </script>
+</body>
+</html>
